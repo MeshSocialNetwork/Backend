@@ -1,0 +1,27 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MeshSocialNetwork/Backend.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/MeshSocialNetwork/Backend/issues"
+  },
+  "homepage": "https://github.com/MeshSocialNetwork/Backend#readme",
+  "dependencies": {
+    "body-parser": "^1.19.2",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.17.3",
+    "infinitedb": "^1.0.15",
+    "nodemailer": "^6.7.2",
+    "uuid": "^8.3.2"
+  }
+}
