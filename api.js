@@ -239,7 +239,7 @@ module.exports = class Api {
 
         if (session) {
             let cdnId = req.body.cdnId
-            let id = req.body.imageId
+            let id = req.body.id
             let type = req.body.type
 
             if(!cdnId){
