@@ -2,7 +2,7 @@ module.exports = class Input{
     verifyUsername(username){
         let regex = new RegExp('^(?=.{4,16}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$')
 
-        let match = username.match(regex)
+        let match = username.match(regex)[0]
 
         return (match.length === username.length)
     }
@@ -10,7 +10,7 @@ module.exports = class Input{
     verifyEmail(email){
         let regex = new RegExp('/^(([^<>()\\[\\]\\\\.,;:\\s@"]+(\\.[^<>()\\[\\]\\\\.,;:\\s@"]+)*)|(".+"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$/')
 
-        let match = email.match(regex)
+        let match = email.match(regex)[0]
 
         return (match.length === email.length)
     }
@@ -18,7 +18,7 @@ module.exports = class Input{
     verifyPassword(password){
         let regex = new RegExp('^.{8,64}$')
 
-        let match = password.match(regex)
+        let match = password.match(regex)[0]
 
         return (match.length === password.length)
     }
