@@ -1,6 +1,6 @@
 module.exports = class Input{
     verifyUsername(username){
-        let regex = new RegExp('^(?=.{4,16}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$')
+        let regex = new RegExp(/^(?=.{4,16}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/)
 
         let match = username.match(regex)
 
@@ -12,7 +12,7 @@ module.exports = class Input{
     }
 
     verifyEmail(email){
-        let regex = new RegExp('/^(([^<>()\\[\\]\\\\.,;:\\s@"]+(\\.[^<>()\\[\\]\\\\.,;:\\s@"]+)*)|(".+"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$/')
+        let regex = new RegExp(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)
 
         let match = email.match(regex)
 
@@ -24,7 +24,7 @@ module.exports = class Input{
     }
 
     verifyPassword(password){
-        let regex = new RegExp('^.{8,64}$')
+        let regex = new RegExp(/^.{8,64}$/)
 
         let match = password.match(regex)
 
