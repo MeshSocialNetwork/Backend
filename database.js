@@ -19,6 +19,15 @@ const USER_FIELDS = {
         indexed: true,
         unique: true
     },
+    displayedName: {
+        type: 'text',
+        indexed: true,
+        unique: true
+    },
+    chosenName: {
+        type: 'text',
+        indexed: true
+    },
     email: {
         type: 'text',
         indexed: true,
@@ -55,6 +64,11 @@ const COMMUNITY_FIELDS = {
         type: 'text',
         indexed: true,
         unique: true
+    },
+    displayedName: {
+      type: 'text',
+      indexed: true,
+      unique: true
     },
     description: {
         type: 'text',
@@ -257,7 +271,7 @@ module.exports = class Database {
     }
 
     async insertUser(id, name, email, password) {
-        await this.database.insert(USER_TABLE, {id: id, name: name, email: email, emailVerified: false, password: password, image: 'empty'})
+        await this.database.insert(USER_TABLE, {id: id, name: name.toLowerCase(), displayedName: name, chosenName: name, email: email.toLowerCase(), emailVerified: false, password: password, image: 'empty'})
     }
 
     async removeUser(id){
@@ -300,7 +314,7 @@ module.exports = class Database {
         let where = {
             field: 'name',
             operator: '=',
-            value: name
+            value: name.toLowerCase()
         }
 
         let implement = [
@@ -322,7 +336,7 @@ module.exports = class Database {
         let where = {
             field: 'email',
             operator: '=',
-            value: email
+            value: email.toLowerCase()
         }
 
         let implement = [
@@ -395,14 +409,14 @@ module.exports = class Database {
     }
 
     async insertCommunity(name, description) {
-        await this.database.insert(COMMUNITY_TABLE, {name: name, description: description, public: true})
+        await this.database.insert(COMMUNITY_TABLE, {name: name.toLowerCase(), displayedName: name, description: description, public: true})
     }
 
     async removeCommunity(name){
         let communityWhere = {
             field: 'community',
             operator: '=',
-            value: name
+            value: name.toLowerCase()
         }
 
         await this.database.remove(POST_TABLE, {where: communityWhere})
@@ -412,7 +426,7 @@ module.exports = class Database {
         let where = {
             field: 'name',
             operator: '=',
-            value: name
+            value: name.toLowerCase()
         }
 
         return (await this.database.remove(COMMUNITY_TABLE, {where: where}))
@@ -422,7 +436,7 @@ module.exports = class Database {
         let where = {
             field: 'name',
             operator: '=',
-            value: name
+            value: name.toLowerCase()
         }
 
         return (await this.database.query(COMMUNITY_TABLE, {where: where}))[0]
@@ -448,7 +462,7 @@ module.exports = class Database {
         await this.database.insert(POST_TABLE, {
             id: id,
             user: user,
-            community: community,
+            community: community.toLowerCase(),
             title: title,
             content: content,
             created: created
@@ -499,7 +513,7 @@ module.exports = class Database {
         let where = {
             field: 'community',
             operator: '=',
-            value: name
+            value: name.toLowerCase()
         }
 
         let sort = {
@@ -547,7 +561,7 @@ module.exports = class Database {
         let where = {
             field: 'community',
             operator: '=',
-            value: communities[0].name
+            value: communities[0].name.toLowerCase()
         }
 
         let lastOr = where
@@ -556,7 +570,7 @@ module.exports = class Database {
             lastOr.or = {
                 field: 'community',
                 operator: '=',
-                value: communities[i].name
+                value: communities[i].name.toLowerCase()
             }
 
             lastOr = lastOr.or
@@ -604,7 +618,7 @@ module.exports = class Database {
     }
 
     async insertSubscription(user, community){
-        await this.database.insert(SUBSCRIPTION_TABLE, {user: user, community: community})
+        await this.database.insert(SUBSCRIPTION_TABLE, {user: user, community: community.toLowerCase()})
     }
 
     async removeSubscription(user, community){
@@ -615,7 +629,7 @@ module.exports = class Database {
             and: {
                 field: 'community',
                 operator: '=',
-                value: community
+                value: community.toLowerCase()
             }
         }
 

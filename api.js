@@ -538,7 +538,7 @@ module.exports = class Api {
                     for (let i in subscriptions) {
                         let subscription = subscriptions[i]
 
-                        if (subscription.name === communityName) {
+                        if (subscription.name === communityName.toLowerCase()) {
                             alreadySubscribed = true
                             break
                         }
