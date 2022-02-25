@@ -1,7 +1,8 @@
 const {v4: uuidv4} = require("uuid")
 const crypto = require('crypto')
-const Permission = require("./permission");
-const Mail = require("./mail.js");
+const Permission = require('./permission')
+const Mail = require('./mail.js')
+const Input = require('./input.js')
 
 module.exports = class Api {
     constructor(database, config) {
@@ -9,6 +10,7 @@ module.exports = class Api {
         this.database = database
         this.permission = new Permission(database)
         this.mail = new Mail(config)
+        this.input = new Input()
     }
 
     async createAdminUser() {
@@ -36,7 +38,7 @@ module.exports = class Api {
                 let user = await this.database.getUser(name)
 
                 if (user) {
-                    user = this.addImageToUser(user)
+                    user = this.#addImageToUser(user)
                     user = this.database.cleanUser(user)
 
                     res.send(user)
@@ -58,13 +60,13 @@ module.exports = class Api {
         if (session) {
             let user = await this.database.getUser(session.user.name)
             user.password = undefined
-            user = this.addImageToUser(user)
+            user = this.#addImageToUser(user)
 
             res.send(user)
         }
     }
 
-    addImageToUser(user){
+    #addImageToUser(user){
         if(user.image === 'empty'){
             user.image = undefined
         }else{
@@ -86,33 +88,41 @@ module.exports = class Api {
         } else if (!password) {
             res.status(400).send({message: 'No password'})
         } else {
-            let id = uuidv4()
+            if(!this.input.verifyUsername(username)){
+                res.status(400).send({message: 'Not a valid username'})
+            }else if(!this.input.verifyEmail(email)){
+                res.status(400).send({message: 'Not a valid email'})
+            }else if(!this.input.verifyPassword(password)){
+                res.status(400).send({message: 'Not a valid password'})
+            }else{
+                let id = uuidv4()
 
-            password = Api.#hash(password)
+                password = Api.#hash(password)
 
-            try {
-                let existingUser = await this.database.getUser(username)
+                try {
+                    let existingUser = await this.database.getUser(username)
 
-                if (!existingUser) {
-                    existingUser = await this.database.getUserFromEmail(email)
+                    if (!existingUser) {
+                        existingUser = await this.database.getUserFromEmail(email)
 
-                    if(!existingUser){
-                        await this.database.insertUser(id, username, email, password)
+                        if(!existingUser){
+                            await this.database.insertUser(id, username, email, password)
 
-                        let mailVerification = uuidv4()
-                        await this.database.insertMailVerification(id, mailVerification, Date.now())
-                        await this.mail.sendVerificationEmail(email, username, mailVerification)
+                            let mailVerification = uuidv4()
+                            await this.database.insertMailVerification(id, mailVerification, Date.now())
+                            await this.mail.sendVerificationEmail(email, username, mailVerification)
 
-                        res.send({message: 'User registered, please verify email'})
-                    }else{
-                        res.status(400).send({message: 'Email already used'})
+                            res.send({message: 'User registered, please verify email'})
+                        }else{
+                            res.status(400).send({message: 'Email already used'})
+                        }
+                    } else {
+                        res.status(400).send({message: 'Username already used'})
                     }
-                } else {
-                    res.status(400).send({message: 'Username already used'})
+                } catch (e) {
+                    res.status(500).send({message: 'Internal server error'})
+                    console.log(e)
                 }
-            } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
-                console.log(e)
             }
         }
     }
@@ -447,7 +457,7 @@ module.exports = class Api {
         } else {
             try {
                 let post = await this.database.getPost(postId)
-                post.user = this.addImageToUser(post.user)
+                post.user = this.#addImageToUser(post.user)
 
                 if (post) {
                     res.send(post)
@@ -474,7 +484,7 @@ module.exports = class Api {
                 let posts = await this.database.getCommunityPosts(communityName, skip, limit)
 
                 for(let i in posts){
-                    posts[i].user = this.addImageToUser(posts[i].user)
+                    posts[i].user = this.#addImageToUser(posts[i].user)
                 }
 
                 res.send(posts)
@@ -498,7 +508,7 @@ module.exports = class Api {
                 let posts = await this.database.getUserPosts(username, skip, limit)
 
                 for(let i in posts){
-                    posts[i].user = this.addImageToUser(posts[i].user)
+                    posts[i].user = this.#addImageToUser(posts[i].user)
                 }
 
                 res.send(posts)
@@ -641,7 +651,7 @@ module.exports = class Api {
                 let users = await this.database.matchUser(term, 0, 50)
 
                 for(let i in users){
-                    users[i] = this.addImageToUser(users[i])
+                    users[i] = this.#addImageToUser(users[i])
                 }
 
                 let communities = await this.database.matchCommunity(term, 0, 50)
@@ -649,7 +659,7 @@ module.exports = class Api {
                 let posts = await this.database.matchCommunityPost(term, 0, 50)
 
                 for(let i in posts){
-                    posts[i].user = this.addImageToUser(posts[i].user)
+                    posts[i].user = this.#addImageToUser(posts[i].user)
                 }
 
                 let result = {
@@ -679,7 +689,7 @@ module.exports = class Api {
                 let users = await this.database.matchUser(term, skip, limit)
 
                 for(let i in users){
-                    users[i] = this.addImageToUser(users[i])
+                    users[i] = this.#addImageToUser(users[i])
                 }
 
                 res.send(users)
@@ -721,7 +731,7 @@ module.exports = class Api {
                 let posts = await this.database.matchCommunityPost(term, skip, limit)
 
                 for(let i in posts){
-                    posts[i].user = this.addImageToUser(posts[i].user)
+                    posts[i].user = this.#addImageToUser(posts[i].user)
                 }
 
                 res.send(posts)
