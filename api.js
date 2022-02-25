@@ -239,20 +239,27 @@ module.exports = class Api {
 
         if (session) {
             let cdnId = req.body.cdnId
-            let imageId = req.body.imageId
+            let id = req.body.imageId
+            let type = req.body.type
 
             if(!cdnId){
                 res.status(400).send({message: Messages.missingBodyValue('cdnId')})
-            }else if(!imageId){
-                res.status(400).send({message: Messages.missingBodyValue('imageId')})
+            }else if(!id) {
+                res.status(400).send({message: Messages.missingBodyValue('id')})
+            }else if(!type){
+                res.status(400).send({message: Messages.missingBodyValue('type')})
             }else{
-                try{
-                    await this.database.updateUserImage(session.user.id, `${cdnId}/image/${imageId}`)
+                if(type === 'image' || type === 'animated'){
+                    try{
+                        await this.database.updateUserImage(session.user.id, `${cdnId}/${type}/${id}`)
 
-                    res.send({message: Messages.updatedUser})
-                }catch (e) {
-                    res.status(500).send({message: Messages.internalServerError})
-                    console.log(e)
+                        res.send({message: Messages.updatedUser})
+                    }catch (e) {
+                        res.status(500).send({message: Messages.internalServerError})
+                        console.log(e)
+                    }
+                }else{
+                    res.status(400).send({message: Messages.invalidBodyValue('type')})
                 }
             }
         }
