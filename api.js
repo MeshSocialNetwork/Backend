@@ -3,6 +3,7 @@ const crypto = require('crypto')
 const Permission = require('./permission')
 const Mail = require('./mail.js')
 const Input = require('./input.js')
+const Messages = require('./messages.js')
 
 module.exports = class Api {
     constructor(database, config) {
@@ -23,9 +24,9 @@ module.exports = class Api {
             await this.database.insertUser(id, username, email, Api.#hash(password))
             await this.permission.giveAdmin(id)
 
-            console.log(`Created user admin with password ${password}`)
+            console.log(Messages.createdAdminUser(password))
         } catch (e) {
-            console.log('Could not create admin user')
+            console.log(Messages.couldNotCreateAdminUser)
             console.log(e)
         }
     }
@@ -33,7 +34,9 @@ module.exports = class Api {
     async getUserFromName(req, res) {
         let name = req.params.name
 
-        if (name) {
+        if (!name) {
+            res.status(400).send({message: Messages.missingParameterValue('name')})
+        } else {
             try {
                 let user = await this.database.getUser(name)
 
@@ -43,14 +46,12 @@ module.exports = class Api {
 
                     res.send(user)
                 } else {
-                    res.status(404).send({message: 'Could not find user'})
+                    res.status(404).send({message: Messages.couldNotFindUser})
                 }
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
-        } else {
-            res.status(400).send({message: 'Missing parameter name'})
         }
     }
 
@@ -66,34 +67,24 @@ module.exports = class Api {
         }
     }
 
-    #addImageToUser(user){
-        if(user.image === 'empty'){
-            user.image = undefined
-        }else{
-            user.image = this.config.url + '/api/cdn/' + user.image
-        }
-
-        return user
-    }
-
     async registerUser(req, res) {
         let username = req.body.username
         let email = req.body.email
         let password = req.body.password
 
         if (!username) {
-            res.status(400).send({message: 'No username'})
+            res.status(400).send({message: Messages.missingBodyValue('username')})
         } else if (!email) {
-            res.status(400).send({message: 'No email'})
+            res.status(400).send({message: Messages.missingBodyValue('email')})
         } else if (!password) {
-            res.status(400).send({message: 'No password'})
+            res.status(400).send({message: Messages.missingBodyValue('password')})
         } else {
             if(!this.input.verifyUsername(username)){
-                res.status(400).send({message: 'Not a valid username'})
+                res.status(400).send({message: Messages.invalidBodyValue('username')})
             }else if(!this.input.verifyEmail(email)){
-                res.status(400).send({message: 'Not a valid email'})
+                res.status(400).send({message: Messages.invalidBodyValue('email')})
             }else if(!this.input.verifyPassword(password)){
-                res.status(400).send({message: 'Not a valid password'})
+                res.status(400).send({message: Messages.invalidBodyValue('password')})
             }else{
                 let id = uuidv4()
 
@@ -112,15 +103,15 @@ module.exports = class Api {
                             await this.database.insertMailVerification(id, mailVerification, Date.now())
                             await this.mail.sendVerificationEmail(email, username, mailVerification)
 
-                            res.send({message: 'User registered, please verify email'})
+                            res.send({message: Messages.userRegistered})
                         }else{
-                            res.status(400).send({message: 'Email already used'})
+                            res.status(400).send({message: Messages.emailAlreadyUsed})
                         }
                     } else {
-                        res.status(400).send({message: 'Username already used'})
+                        res.status(400).send({message: Messages.usernameAlreadyUsed})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -132,9 +123,9 @@ module.exports = class Api {
         let verificationId = req.query.verificationId
 
         if(!username){
-            res.status(400).send({message: 'No username'})
+            res.status(400).send({message: Messages.missingQueryValue('username')})
         }else if(!verificationId){
-            res.status(400).send({message: 'No verificationId'})
+            res.status(400).send({message: Messages.missingQueryValue('verificationId')})
         }else{
             try{
                 let user = await this.database.getUser(username)
@@ -149,15 +140,15 @@ module.exports = class Api {
                         await this.permission.giveCreateCommunity(user.id)
                         await this.permission.giveCreatePost(user.id)
 
-                        res.send({message: 'Email verified and account unlocked'})
+                        res.send({message: Messages.emailVerified})
                     }else{
-                        res.status(400).send({message: 'Could not find verification'})
+                        res.status(400).send({message: Messages.verificationNotFound})
                     }
                 }else{
-                    res.status(404).send({message: 'Could not find user'})
+                    res.status(404).send({message: Messages.couldNotFindUser})
                 }
             }catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -168,9 +159,9 @@ module.exports = class Api {
         let password = req.body.password
 
         if (!username) {
-            res.status(400).send({message: 'No username'})
+            res.status(400).send({message: Messages.missingBodyValue('username')})
         } else if (!password) {
-            res.status(400).send({message: 'No password'})
+            res.status(400).send({message: Messages.missingBodyValue('password')})
         } else {
             try {
                 let user = await this.database.getUser(username)
@@ -186,19 +177,19 @@ module.exports = class Api {
 
                             //TODO max age
                             res.cookie('session', sessionId)
-                            res.send({message: 'Login success'})
+                            res.send({message: Messages.loginSuccessful})
                         } else {
-                            res.status(401).send({message: 'Password is wrong'})
+                            res.status(401).send({message: Messages.wrongPassword})
                         }
                     }else{
-                        res.status(400).send({message: 'User email not verified'})
+                        res.status(400).send({message: Messages.emailNotVerified})
                     }
 
                 } else {
-                    res.status(404).send({message: 'Could not find user'})
+                    res.status(404).send({message: Messages.couldNotFindUser})
                 }
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -212,9 +203,9 @@ module.exports = class Api {
             let newPassword = req.body.newPassword
 
             if (!password) {
-                res.status(400).send({message: 'No password'})
+                res.status(400).send({message: Messages.missingBodyValue('password')})
             } else if (!newPassword) {
-                res.status(400).send({message: 'No newPassword'})
+                res.status(400).send({message: Messages.missingBodyValue('newPassword')})
             } else {
                 let user = session.user
 
@@ -228,15 +219,15 @@ module.exports = class Api {
                         if (user.password === password) {
                             await this.database.updateUserPassword(user.id, newPassword)
 
-                            res.send({message: 'Updated password'})
+                            res.send({message: Messages.updatedUser})
                         } else {
-                            res.status(401).send({message: 'Password is wrong'})
+                            res.status(401).send({message: Messages.wrongPassword})
                         }
                     } else {
-                        res.status(404).send({message: 'Could not find user'})
+                        res.status(404).send({message: Messages.couldNotFindUser})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -251,16 +242,16 @@ module.exports = class Api {
             let imageId = req.body.imageId
 
             if(!cdnId){
-                res.status(400).send({message: 'No cdnId'})
+                res.status(400).send({message: Messages.missingBodyValue('cdnId')})
             }else if(!imageId){
-                res.status(400).send({message: 'No imageId'})
+                res.status(400).send({message: Messages.missingBodyValue('imageId')})
             }else{
                 try{
                     await this.database.updateUserImage(session.user.id, `${cdnId}/image/${imageId}`)
 
-                    res.send({message: 'Updated user image'})
+                    res.send({message: Messages.updatedUser})
                 }catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -274,7 +265,7 @@ module.exports = class Api {
             let password = req.body.password
 
             if (!password) {
-                res.status(400).send({message: 'No password'})
+                res.status(400).send({message: Messages.missingBodyValue('password')})
             } else {
                 let user = session.user
 
@@ -286,18 +277,18 @@ module.exports = class Api {
 
                         if (user.password === password) {
                             if ((await this.database.removeUser(user.id)) > 0) {
-                                res.send({message: 'User deleted'})
+                                res.send({message: Messages.deletedUser})
                             } else {
-                                res.status(500).send({message: 'Could not delete user'})
+                                res.status(500).send({message: Messages.couldNotDeleteUser})
                             }
                         } else {
-                            res.status(401).send({message: 'Password is wrong'})
+                            res.status(401).send({message: Messages.wrongPassword})
                         }
                     } else {
-                        res.status(404).send({message: 'Could not find user'})
+                        res.status(404).send({message: Messages.couldNotFindUser})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -312,9 +303,9 @@ module.exports = class Api {
             let description = req.body.description
 
             if (!name) {
-                res.status(400).send({message: 'No name'})
+                res.status(400).send({message: Messages.missingBodyValue('name')})
             } else if (!description) {
-                res.status(400).send({message: 'No description'})
+                res.status(400).send({message: Messages.missingBodyValue('description')})
             } else {
                 try {
                     let user = session.user
@@ -328,15 +319,15 @@ module.exports = class Api {
                             await this.database.insertCommunity(name, description, user.id)
                             await this.permission.giveModerator(user.id, name)
 
-                            res.send({message: 'Created new community'})
+                            res.send({message: Messages.createdCommunity})
                         } else {
-                            res.status(400).send({message: 'Community already exists'})
+                            res.status(400).send({message: Messages.communityAlreadyExists})
                         }
                     } else {
-                        res.status(401).send({message: 'No permission to create community'})
+                        res.status(401).send({message: Messages.noPermission})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -350,22 +341,22 @@ module.exports = class Api {
             let name = req.params.name
 
             if (!name) {
-                res.status(400).send({message: 'No name'})
+                res.status(400).send({message: Messages.missingParameterValue('name')})
             } else {
                 try {
                     let user = session.user
 
                     if ((await this.permission.moderator(user.id, name))) {
                         if ((await this.database.removeCommunity(name)) > 0) {
-                            res.send({message: 'Deleted community'})
+                            res.send({message: Messages.deletedCommunity})
                         } else {
-                            res.status(500).send({message: 'Could not delete community'})
+                            res.status(500).send({message: Messages.couldNotDeleteCommunity})
                         }
                     } else {
-                        res.status(401).send({message: 'No permission to delete community'})
+                        res.status(401).send({message: Messages.noPermission})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -383,11 +374,11 @@ module.exports = class Api {
             let content = req.body.content
 
             if (!communityName) {
-                res.status(400).send({message: 'No community'})
+                res.status(400).send({message: Messages.missingParameterValue('communityName')})
             } else if (!title) {
-                res.status(400).send({message: 'No title'})
+                res.status(400).send({message: Messages.missingBodyValue('title')})
             } else if (!content) {
-                res.status(400).send({message: 'No content'})
+                res.status(400).send({message: Messages.missingBodyValue('content')})
             } else {
                 try {
                     if ((await this.permission.createCommunityPost(user.id, communityName))) {
@@ -399,15 +390,15 @@ module.exports = class Api {
 
                             await this.database.insertPost(postId, user.id, community.name, title, content, created)
 
-                            res.send({message: 'Created post', community: communityName, postId: postId})
+                            res.send({message: Messages.createdPost, community: communityName, postId: postId})
                         } else {
-                            res.status(404).send({message: 'Could not find community'})
+                            res.status(404).send({message: Messages.couldNotFindCommunity})
                         }
                     } else {
-                        res.status(401).send({message: 'No permission to create community post'})
+                        res.status(401).send({message: Messages.noPermission})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -422,24 +413,24 @@ module.exports = class Api {
             let postId = req.params.postId
 
             if (!communityName) {
-                res.status(400).send({message: 'No community'})
+                res.status(400).send({message: Messages.missingParameterValue('communityName')})
             } else if (!postId) {
-                res.status(400).send({message: 'No postId'})
+                res.status(400).send({message: Messages.missingParameterValue('postId')})
             } else {
                 try {
                     let user = session.user
 
                     if ((await this.permission.moderator(user.id, communityName)) || (await this.database.getPost(postId)).user.id === user.id) {
                         if ((await this.database.removePost(postId)) > 0) {
-                            res.send({message: 'Deleted post'})
+                            res.send({message: Messages.deletedPost})
                         } else {
-                            res.status(500).send({message: 'Could not delete post'})
+                            res.status(500).send({message: Messages.couldNotDeletePost})
                         }
                     } else {
-                        res.status(401).send({message: 'No permission to delete post'})
+                        res.status(401).send({message: Messages.noPermission})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -451,9 +442,9 @@ module.exports = class Api {
         let postId = req.params.postId
 
         if (!communityName) {
-            res.status(400).send({message: 'No community'})
+            res.status(400).send({message: Messages.missingParameterValue('communityName')})
         } else if (!postId) {
-            res.status(400).send({message: 'No postId'})
+            res.status(400).send({message: Messages.missingParameterValue('postId')})
         } else {
             try {
                 let post = await this.database.getPost(postId)
@@ -462,10 +453,10 @@ module.exports = class Api {
                 if (post) {
                     res.send(post)
                 } else {
-                    res.status(404).send({message: 'Could not find post'})
+                    res.status(404).send({message: Messages.couldNotFindPost})
                 }
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -478,7 +469,7 @@ module.exports = class Api {
         let limit = Api.#sanitizeLimit(req.query.limit)
 
         if (!communityName) {
-            res.status(400).send({message: 'No community'})
+            res.status(400).send({message: Messages.missingParameterValue('communityName')})
         } else {
             try {
                 let posts = await this.database.getCommunityPosts(communityName, skip, limit)
@@ -489,7 +480,7 @@ module.exports = class Api {
 
                 res.send(posts)
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -502,7 +493,7 @@ module.exports = class Api {
         let limit = Api.#sanitizeLimit(req.query.limit)
 
         if (!username) {
-            res.status(400).send({message: 'No user'})
+            res.status(400).send({message: Messages.missingParameterValue('username')})
         } else {
             try {
                 let posts = await this.database.getUserPosts(username, skip, limit)
@@ -513,7 +504,7 @@ module.exports = class Api {
 
                 res.send(posts)
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -528,7 +519,7 @@ module.exports = class Api {
             let communityName = req.params.name
 
             if (!communityName) {
-                res.status(400).send({message: 'No community'})
+                res.status(400).send({message: Messages.missingParameterValue('communityName')})
             } else {
                 try {
                     let subscriptions = await this.database.getSubscriptions(user.id)
@@ -557,18 +548,18 @@ module.exports = class Api {
 
                                 }
 
-                                res.send({message: 'Subscribed to community'})
+                                res.send({message: Messages.subscribedToCommunity})
                             } else {
-                                res.status(404).send({message: 'Could not find community'})
+                                res.status(404).send({message: Messages.couldNotFindCommunity})
                             }
                         } else {
-                            res.status(401).send({message: 'No permission to subscribe to community'})
+                            res.status(401).send({message: Messages.noPermission})
                         }
                     } else {
-                        res.status(400).send({message: 'Already subscribed to community'})
+                        res.status(400).send({message: Messages.alreadySubscribedToCommunity})
                     }
                 } catch (e) {
-                    res.status(500).send({message: 'Internal server error'})
+                    res.status(500).send({message: Messages.internalServerError})
                     console.log(e)
                 }
             }
@@ -583,15 +574,19 @@ module.exports = class Api {
 
             let communityName = req.params.name
 
-            try {
-                if ((await this.database.removeSubscription(user.id, communityName)) > 0) {
-                    res.send({message: 'Unsubscribed from community'})
-                } else {
-                    res.status(500).send({message: 'Could not unsubscribe from community'})
+            if(!communityName){
+                res.status(400).send({message: Messages.missingParameterValue('communityName')})
+            }else{
+                try {
+                    if ((await this.database.removeSubscription(user.id, communityName)) > 0) {
+                        res.send({message: Messages.unsubscribedFromCommunity})
+                    } else {
+                        res.status(500).send({message: Messages.couldNotUnsubscribeFromCommunity})
+                    }
+                } catch (e) {
+                    res.status(500).send({message: Messages.internalServerError})
+                    console.log(e)
                 }
-            } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
-                console.log(e)
             }
         }
     }
@@ -607,16 +602,14 @@ module.exports = class Api {
 
                 res.send(communities)
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
     }
 
     async getFrontpage(req, res) {
-        //TODO implement frontpage for not logged in users
-
-        let session = await this.#checkSession(req, res)
+        let session = await this.#checkSession(req, res, true)
 
         if (session) {
             let user = session.user
@@ -632,11 +625,17 @@ module.exports = class Api {
 
                     res.send(posts)
                 } else {
-                    res.status(404).send({message: 'No subscribed communities'})
+                    res.send([])
                 }
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
+            }
+        }else{
+            try{
+                res.send([])
+            }catch (e) {
+
             }
         }
     }
@@ -645,7 +644,7 @@ module.exports = class Api {
         let term = req.query.term
 
         if (!term) {
-            res.status(500).send({message: 'No term'})
+            res.status(500).send({message: Messages.missingQueryValue('term')})
         } else {
             try {
                 let users = await this.database.matchUser(term, 0, 50)
@@ -670,7 +669,7 @@ module.exports = class Api {
 
                 res.send(result)
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -680,7 +679,7 @@ module.exports = class Api {
         let term = req.query.term
 
         if (!term) {
-            res.status(500).send({message: 'No term'})
+            res.status(500).send({message: Messages.missingQueryValue('term')})
         } else {
             let skip = Api.#sanitizeSkip(req.query.skip)
             let limit = Api.#sanitizeLimit(req.query.limit)
@@ -694,7 +693,7 @@ module.exports = class Api {
 
                 res.send(users)
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -704,7 +703,7 @@ module.exports = class Api {
         let term = req.query.term
 
         if (!term) {
-            res.status(500).send({message: 'No term'})
+            res.status(500).send({message: Messages.missingQueryValue('term')})
         } else {
             let skip = Api.#sanitizeSkip(req.query.skip)
             let limit = Api.#sanitizeLimit(req.query.limit)
@@ -712,7 +711,7 @@ module.exports = class Api {
             try {
                 res.send(await this.database.matchCommunity(term, skip, limit))
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -722,7 +721,7 @@ module.exports = class Api {
         let term = req.query.term
 
         if (!term) {
-            res.status(500).send({message: 'No term'})
+            res.status(500).send({message: Messages.missingQueryValue('term')})
         } else {
             let skip = Api.#sanitizeSkip(req.query.skip)
             let limit = Api.#sanitizeLimit(req.query.limit)
@@ -736,7 +735,7 @@ module.exports = class Api {
 
                 res.send(posts)
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         }
@@ -748,7 +747,7 @@ module.exports = class Api {
 
             res.send({cdn: cdn})
         } catch (e) {
-            res.status(500).send({message: 'Internal server error'})
+            res.status(500).send({message: Messages.internalServerError})
             console.log(e)
         }
     }
@@ -777,7 +776,17 @@ module.exports = class Api {
         return limit
     }
 
-    async #checkSession(req, res) {
+    #addImageToUser(user){
+        if(user.image === 'empty'){
+            user.image = undefined
+        }else{
+            user.image = this.config.url + '/api/cdn/' + user.image
+        }
+
+        return user
+    }
+
+    async #checkSession(req, res, noError) {
         const sessionId = req.cookies.session
 
         if (sessionId) {
@@ -789,20 +798,22 @@ module.exports = class Api {
                         if(session.user.emailVerified){
                             return session
                         }else{
-                            res.status(400).send({message: 'Email not verified'})
+                            res.status(400).send({message: Messages.emailNotVerified})
                         }
                     } else {
-                        res.status(404).send({message: 'User not found'})
+                        res.status(404).send({message: Messages.couldNotFindUser})
                     }
                 } else {
-                    res.status(401).send({message: 'Invalid session'})
+                    res.status(401).send({message: Messages.invalidSession})
                 }
             } catch (e) {
-                res.status(500).send({message: 'Internal server error'})
+                res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
             }
         } else {
-            res.status(401).send({message: 'Not logged in'})
+            if(!noError){
+                res.status(401).send({message: Messages.notLoggedIn})
+            }
         }
     }
 
