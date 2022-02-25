@@ -515,11 +515,25 @@ module.exports = class Database {
             let newUser = this.cleanUser(user)
 
             newUser.email = user.email
-            newUser.permissions = user.permissions
+            newUser.permissions = Database.#cleanPermissions(user.permissions)
 
             return newUser
         }else{
             return {}
+        }
+    }
+
+    static #cleanPermissions(permissions){
+        if(permissions){
+            let newPermissions = []
+
+            for(let i in permissions){
+                newPermissions.push(permissions[i].permission)
+            }
+
+            return newPermissions
+        }else{
+            return []
         }
     }
 
