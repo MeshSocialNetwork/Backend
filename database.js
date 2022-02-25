@@ -500,8 +500,22 @@ module.exports = class Database {
             }
 
             newUser.id = user.id
-            newUser.name = user.name
+            newUser.name = user.displayedName
+            newUser.chosenName = user.chosenName
             newUser.image = user.image
+
+            return newUser
+        }else{
+            return {}
+        }
+    }
+
+    cleanOwnUser(user){
+        if(user){
+            let newUser = this.cleanUser(user)
+
+            newUser.email = user.email
+            newUser.permissions = user.permissions
 
             return newUser
         }else{

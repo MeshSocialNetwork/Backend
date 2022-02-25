@@ -59,7 +59,7 @@ module.exports = class Api {
 
         if (session) {
             let user = await this.database.getUser(session.user.name)
-            user.password = undefined
+            user = this.database.cleanOwnUser(user)
             user = this.#addImageToUser(user)
 
             res.send(user)
