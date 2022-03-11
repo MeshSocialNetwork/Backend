@@ -257,7 +257,7 @@ module.exports = class Database {
             }
         }
 
-        return (await this.database.query(MAIL_VERIFICATION_TABLE, {where: where}))[0]
+        return (await this.database.get(MAIL_VERIFICATION_TABLE, {where: where}))[0]
     }
 
     async removeMailVerification(user){
@@ -329,7 +329,7 @@ module.exports = class Database {
             }
         ]
 
-        return (await this.database.query(USER_TABLE, {where: where, implement: implement}))[0]
+        return (await this.database.get(USER_TABLE, {where: where, implement: implement}))[0]
     }
 
     async getUserFromEmail(email){
@@ -351,7 +351,7 @@ module.exports = class Database {
             }
         ]
 
-        return (await this.database.query(USER_TABLE, {where: where, implement: implement}))[0]
+        return (await this.database.get(USER_TABLE, {where: where, implement: implement}))[0]
     }
 
     async matchUser(name, skip, limit){
@@ -367,7 +367,7 @@ module.exports = class Database {
             levenshtein: name
         }
 
-        let result = await this.database.query(USER_TABLE, { where: where, sort: sort, skip: skip, limit: limit })
+        let result = await this.database.get(USER_TABLE, { where: where, sort: sort, skip: skip, limit: limit })
 
         for(let i in result){
             result[i] = this.cleanUser(result[i])
@@ -398,7 +398,7 @@ module.exports = class Database {
             }
         ]
 
-        let session = (await this.database.query(SESSION_TABLE, {where: where, implement: implement}))[0]
+        let session = (await this.database.get(SESSION_TABLE, {where: where, implement: implement}))[0]
 
         if(session && session.user){
             session.user.password = undefined
@@ -439,7 +439,7 @@ module.exports = class Database {
             value: name.toLowerCase()
         }
 
-        return (await this.database.query(COMMUNITY_TABLE, {where: where}))[0]
+        return (await this.database.get(COMMUNITY_TABLE, {where: where}))[0]
     }
 
     async matchCommunity(name, skip, limit){
@@ -455,7 +455,7 @@ module.exports = class Database {
             levenshtein: name
         }
 
-        return (await this.database.query(COMMUNITY_TABLE, {where: where, sort:sort, skip: skip, limit: limit}))
+        return (await this.database.get(COMMUNITY_TABLE, {where: where, sort:sort, skip: skip, limit: limit}))
     }
 
     async insertPost(id, user, community, title, content, created) {
@@ -486,7 +486,7 @@ module.exports = class Database {
             value: id
         }
 
-        let result = (await this.database.query(POST_TABLE, {where: where, implement: POST_IMPLEMENT}))[0]
+        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT}))[0]
 
         result.user = this.cleanUser(result.user)
 
@@ -549,7 +549,7 @@ module.exports = class Database {
             direction: 'desc'
         }
 
-        let result = (await this.database.query(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
+        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
 
         for(let i in result){
             result[i].user = this.cleanUser(result[i].user)
@@ -576,7 +576,7 @@ module.exports = class Database {
             levenshtein: value
         }
 
-        let result = (await this.database.query(POST_TABLE, {where: where, implement: POST_IMPLEMENT, sort: sort, skip: skip, limit: limit}))
+        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, sort: sort, skip: skip, limit: limit}))
 
         for(let i in result){
             result[i].user = this.cleanUser(result[i].user)
@@ -609,7 +609,7 @@ module.exports = class Database {
             direction: 'desc'
         }
 
-        let result = (await this.database.query(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
+        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
 
         for(let i in result){
             result[i].user = this.cleanUser(result[i].user)
@@ -633,7 +633,7 @@ module.exports = class Database {
                 direction: 'desc'
             }
 
-            let result = (await this.database.query(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
+            let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
 
             for(let i in result){
                 result[i].user = this.cleanUser(result[i].user)
@@ -682,7 +682,7 @@ module.exports = class Database {
             }
         ]
 
-        let data = await this.database.query(SUBSCRIPTION_TABLE, { where: where, implement: implement })
+        let data = await this.database.get(SUBSCRIPTION_TABLE, { where: where, implement: implement })
 
         let result = []
 
@@ -699,7 +699,7 @@ module.exports = class Database {
             direction: 'desc'
         }
 
-        return await this.database.query(CDN_TABLE, {sort: sort})
+        return await this.database.get(CDN_TABLE, {sort: sort})
     }
 
     async insertPermission(user, permission){
@@ -718,6 +718,6 @@ module.exports = class Database {
             }
         }
 
-        return (await this.database.query(PERMISSION_TABLE, {where: where}))[0]
+        return (await this.database.get(PERMISSION_TABLE, {where: where}))[0]
     }
 }
