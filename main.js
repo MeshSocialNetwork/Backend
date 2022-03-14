@@ -62,7 +62,7 @@ database.connect().then(() => {
         api.deleteUser(req, res)
     })
 
-    app.get(API_PREFIX + '/communities', (req, res) => {
+    app.get(API_PREFIX + '/user/communities', (req, res) => {
         api.getSubscribedCommunities(req, res)
     })
 

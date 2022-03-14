@@ -479,13 +479,21 @@ module.exports = class Api {
             res.status(400).send({message: Messages.missingParameterValue('communityName')})
         } else {
             try {
-                let posts = await this.database.getCommunityPosts(communityName, skip, limit)
+                let community = await this.database.getCommunity(communityName)
 
-                for(let i in posts){
-                    posts[i].user = this.#addImageToUser(posts[i].user)
+                if(community){
+                    let posts = await this.database.getCommunityPosts(communityName, skip, limit)
+
+                    for(let i in posts){
+                        posts[i].user = this.#addImageToUser(posts[i].user)
+                    }
+
+                    community.posts = posts
+
+                    res.send(community)
+                }else{
+                    res.status(404).send({message: Messages.couldNotFindCommunity})
                 }
-
-                res.send(posts)
             } catch (e) {
                 res.status(500).send({message: Messages.internalServerError})
                 console.log(e)
