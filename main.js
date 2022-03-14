@@ -34,6 +34,10 @@ database.connect().then(() => {
         api.verifyUserMail(req, res)
     })
 
+    app.get(API_PREFIX + '/user/communities', (req, res) => {
+        api.getSubscribedCommunities(req, res)
+    })
+
     app.get(API_PREFIX + '/user/:name', (req, res) => {
         api.getUserFromName(req, res)
     })
@@ -60,10 +64,6 @@ database.connect().then(() => {
 
     app.delete(API_PREFIX + '/user', (req, res) => {
         api.deleteUser(req, res)
-    })
-
-    app.get(API_PREFIX + '/user/communities', (req, res) => {
-        api.getSubscribedCommunities(req, res)
     })
 
     app.post(API_PREFIX + '/community', (req, res) => {
