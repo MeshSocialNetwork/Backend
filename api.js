@@ -475,10 +475,31 @@ module.exports = class Api {
         let skip = Api.#sanitizeSkip(req.query.skip)
         let limit = Api.#sanitizeLimit(req.query.limit)
 
+        let session = await this.#checkSession(req, res, true)
+
         if (!communityName) {
             res.status(400).send({message: Messages.missingParameterValue('communityName')})
         } else {
             try {
+                let subscribed = false
+
+                if(session){
+                    let user = session.user
+
+                    if(user){
+                        let subscriptions = await this.database.getSubscriptions(user.id)
+
+                        for (let i in subscriptions) {
+                            let subscription = subscriptions[i]
+
+                            if (subscription.name === communityName.toLowerCase()) {
+                                subscribed = true
+                                break
+                            }
+                        }
+                    }
+                }
+
                 let community = await this.database.getCommunity(communityName)
 
                 if(community){
@@ -489,6 +510,7 @@ module.exports = class Api {
                     }
 
                     community.posts = posts
+                    community.subscribed = subscribed
 
                     res.send(community)
                 }else{

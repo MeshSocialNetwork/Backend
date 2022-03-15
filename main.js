@@ -34,10 +34,6 @@ database.connect().then(() => {
         api.verifyUserMail(req, res)
     })
 
-    app.get(API_PREFIX + '/user/communities', (req, res) => {
-        api.getSubscribedCommunities(req, res)
-    })
-
     app.get(API_PREFIX + '/user/:name', (req, res) => {
         api.getUserFromName(req, res)
     })
@@ -84,6 +80,10 @@ database.connect().then(() => {
 
     app.get(API_PREFIX + '/community/:name/unsubscribe', (req, res) => {
         api.unsubscribeFromCommunity(req, res)
+    })
+
+    app.get(API_PREFIX + '/communities/subscribed', (req, res) => {
+        api.getSubscribedCommunities(req, res)
     })
 
     app.get(API_PREFIX + '/community/:name/:postId', (req, res) => {
