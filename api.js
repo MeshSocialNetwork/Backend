@@ -657,7 +657,7 @@ module.exports = class Api {
             try {
                 let communities = await this.database.getSubscriptions(user.id)
 
-                if (communities) {
+                if (communities.length > 0) {
                     let posts = await this.database.getCommunitiesPosts(communities, skip, limit)
 
                     res.send(posts)
