@@ -693,7 +693,7 @@ module.exports = class Database {
         let where = {
             field: 'load',
             operator: '>',
-            value: '0'
+            value: -1
         }
 
         let sort = {
