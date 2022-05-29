@@ -695,7 +695,7 @@ module.exports = class Database {
             direction: 'desc'
         }
 
-        return await this.database.getFromDatabaseTable(CDN_TABLE, {sort: sort}).results
+        return (await this.database.getFromDatabaseTable(CDN_TABLE, {sort: sort})).results
     }
 
     async insertPermission(user, permission){
