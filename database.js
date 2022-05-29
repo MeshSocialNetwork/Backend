@@ -2,7 +2,7 @@ const InfiniteDB = require('infinitedb')
 
 const HOST = {
     hostname: 'infinitedb',
-    port: '6677'
+    port: '8080'
 }
 
 const DATABASE_NAME = 'mesh'
@@ -53,8 +53,7 @@ const SESSION_FIELDS = {
     },
     user: {
         type: 'text',
-        indexed: true,
-        external: true
+        indexed: true
     }
 }
 
@@ -105,8 +104,7 @@ const POST_FIELDS = {
     },
     community: {
         type: 'text',
-        indexed: true,
-        external: true
+        indexed: true
     },
     title: {
         type: 'text',
@@ -126,8 +124,7 @@ const PERMISSION_TABLE = 'permissions'
 const PERMISSION_FIELDS = {
     user: {
         type: 'text',
-        indexed: true,
-        external: true
+        indexed: true
     },
     permission: {
         type: 'text',
@@ -140,7 +137,6 @@ const MAIL_VERIFICATION_FIELDS = {
     user: {
         type: 'text',
         indexed: true,
-        external: true,
         unique: true
     },
     verification: {
@@ -192,49 +188,49 @@ module.exports = class Database {
         await this.database.connect()
 
         try {
-            await this.database.createTable(USER_TABLE, USER_FIELDS)
+            await this.database.createTableInDatabase(USER_TABLE, USER_FIELDS)
             console.log('Created user table')
         } catch (e) {
             console.log('Could not create user table')
         }
 
         try {
-            await this.database.createTable(SESSION_TABLE, SESSION_FIELDS)
+            await this.database.createTableInDatabase(SESSION_TABLE, SESSION_FIELDS)
             console.log('Created session table')
         } catch (e) {
             console.log('Could not create session table')
         }
 
         try{
-            await this.database.createTable(SUBSCRIPTION_TABLE, SUBSCRIPTION_FIELDS)
+            await this.database.createTableInDatabase(SUBSCRIPTION_TABLE, SUBSCRIPTION_FIELDS)
             console.log('Created subscription table')
         }catch (e) {
             console.log('Could not create subscription table')
         }
 
         try {
-            await this.database.createTable(COMMUNITY_TABLE, COMMUNITY_FIELDS)
+            await this.database.createTableInDatabase(COMMUNITY_TABLE, COMMUNITY_FIELDS)
             console.log('Created community table')
         } catch (e) {
             console.log('Could not create community table')
         }
 
         try {
-            await this.database.createTable(POST_TABLE, POST_FIELDS)
+            await this.database.createTableInDatabase(POST_TABLE, POST_FIELDS)
             console.log('Created post table')
         } catch (e) {
             console.log('Could not create post table')
         }
 
         try{
-            await this.database.createTable(PERMISSION_TABLE, PERMISSION_FIELDS)
+            await this.database.createTableInDatabase(PERMISSION_TABLE, PERMISSION_FIELDS)
             console.log('Created permission table')
         }catch (e) {
             console.log('Could not create permission table')
         }
 
         try{
-            await this.database.createTable(MAIL_VERIFICATION_TABLE, MAIL_VERIFICATION_FIELDS)
+            await this.database.createTableInDatabase(MAIL_VERIFICATION_TABLE, MAIL_VERIFICATION_FIELDS)
             console.log('Created mail verification table')
         }catch (e) {
             console.log('Could not create mail verification table')
@@ -242,7 +238,7 @@ module.exports = class Database {
     }
 
     async insertMailVerification(user, verification, created){
-        await this.database.insert(MAIL_VERIFICATION_TABLE, {user: user, verification: verification, created: created})
+        await this.database.insertToDatabaseTable(MAIL_VERIFICATION_TABLE, {user: user, verification: verification, created: created})
     }
 
     async getMailVerification(user, verification){
@@ -257,7 +253,7 @@ module.exports = class Database {
             }
         }
 
-        return (await this.database.get(MAIL_VERIFICATION_TABLE, {where: where}))[0]
+        return (await this.database.getFromDatabaseTable(MAIL_VERIFICATION_TABLE, {where: where})).results[0]
     }
 
     async removeMailVerification(user){
@@ -267,11 +263,11 @@ module.exports = class Database {
             value: user
         }
 
-        return (await this.database.remove(MAIL_VERIFICATION_TABLE, {where: where}))
+        return (await this.database.removeFromDatabaseTable(MAIL_VERIFICATION_TABLE, {where: where})).results
     }
 
     async insertUser(id, name, email, password) {
-        await this.database.insert(USER_TABLE, {id: id, name: name.toLowerCase(), displayedName: name, chosenName: name, email: email.toLowerCase(), emailVerified: false, password: password, image: 'empty'})
+        await this.database.insertToDatabaseTable(USER_TABLE, {id: id, name: name.toLowerCase(), displayedName: name, chosenName: name, email: email.toLowerCase(), emailVerified: false, password: password, image: 'empty'})
     }
 
     async removeUser(id){
@@ -281,13 +277,13 @@ module.exports = class Database {
             value: id
         }
 
-        await this.database.remove(SESSION_TABLE, {where: userWhere})
+        await this.database.removeFromDatabaseTable(SESSION_TABLE, {where: userWhere})
 
-        await this.database.remove(POST_TABLE, {where: userWhere})
+        await this.database.removeFromDatabaseTable(POST_TABLE, {where: userWhere})
 
-        await this.database.remove(SUBSCRIPTION_TABLE, {where: userWhere})
+        await this.database.removeFromDatabaseTable(SUBSCRIPTION_TABLE, {where: userWhere})
 
-        await this.database.remove(PERMISSION_TABLE, {where: userWhere})
+        await this.database.removeFromDatabaseTable(PERMISSION_TABLE, {where: userWhere})
 
         let where = {
             field: 'id',
@@ -295,19 +291,19 @@ module.exports = class Database {
             value: id
         }
 
-        return (await this.database.remove(USER_TABLE, {where: where}))
+        return (await this.database.removeFromDatabaseTable(USER_TABLE, {where: where})).results
     }
 
     async updateUserPassword(id, password){
-        await this.database.update(USER_TABLE, {id: id, password: password})
+        await this.database.updateInDatabaseTable(USER_TABLE, {id: id, password: password})
     }
 
     async updateUserImage(id, image){
-        await this.database.update(USER_TABLE, {id: id, image: image})
+        await this.database.updateInDatabaseTable(USER_TABLE, {id: id, image: image})
     }
 
     async updateUserMailVerified(id, verified){
-        await this.database.update(USER_TABLE, {id: id, emailVerified: verified})
+        await this.database.updateInDatabaseTable(USER_TABLE, {id: id, emailVerified: verified})
     }
 
     async getUser(name) {
@@ -329,7 +325,7 @@ module.exports = class Database {
             }
         ]
 
-        return (await this.database.get(USER_TABLE, {where: where, implement: implement}))[0]
+        return (await this.database.getFromDatabaseTable(USER_TABLE, {where: where, implement: implement})).results[0]
     }
 
     async getUserFromEmail(email){
@@ -351,7 +347,7 @@ module.exports = class Database {
             }
         ]
 
-        return (await this.database.get(USER_TABLE, {where: where, implement: implement}))[0]
+        return (await this.database.getFromDatabaseTable(USER_TABLE, {where: where, implement: implement})).results[0]
     }
 
     async matchUser(name, skip, limit){
@@ -367,7 +363,7 @@ module.exports = class Database {
             levenshtein: name
         }
 
-        let result = await this.database.get(USER_TABLE, { where: where, sort: sort, skip: skip, limit: limit })
+        let result = await this.database.getFromDatabaseTable(USER_TABLE, { where: where, sort: sort, skip: skip, limit: limit }).results
 
         for(let i in result){
             result[i] = this.cleanUser(result[i])
@@ -377,7 +373,7 @@ module.exports = class Database {
     }
 
     async insertSession(id, user) {
-        await this.database.insert(SESSION_TABLE, {id: id, user: user})
+        await this.database.insertToDatabaseTable(SESSION_TABLE, {id: id, user: user})
     }
 
     async getSession(id) {
@@ -398,7 +394,7 @@ module.exports = class Database {
             }
         ]
 
-        let session = (await this.database.get(SESSION_TABLE, {where: where, implement: implement}))[0]
+        let session = (await this.database.getFromDatabaseTable(SESSION_TABLE, {where: where, implement: implement})).results[0]
 
         if(session && session.user){
             session.user.password = undefined
@@ -409,7 +405,7 @@ module.exports = class Database {
     }
 
     async insertCommunity(name, description) {
-        await this.database.insert(COMMUNITY_TABLE, {name: name.toLowerCase(), displayedName: name, description: description, public: true})
+        await this.database.insertToDatabaseTable(COMMUNITY_TABLE, {name: name.toLowerCase(), displayedName: name, description: description, public: true})
     }
 
     async removeCommunity(name){
@@ -419,9 +415,9 @@ module.exports = class Database {
             value: name.toLowerCase()
         }
 
-        await this.database.remove(POST_TABLE, {where: communityWhere})
+        await this.database.removeFromDatabaseTable(POST_TABLE, {where: communityWhere})
 
-        await this.database.remove(SUBSCRIPTION_TABLE, {where: communityWhere})
+        await this.database.removeFromDatabaseTable(SUBSCRIPTION_TABLE, {where: communityWhere})
 
         let where = {
             field: 'name',
@@ -429,7 +425,7 @@ module.exports = class Database {
             value: name.toLowerCase()
         }
 
-        return (await this.database.remove(COMMUNITY_TABLE, {where: where}))
+        return (await this.database.removeFromDatabaseTable(COMMUNITY_TABLE, {where: where})).removed
     }
 
     async getCommunity(name) {
@@ -439,7 +435,7 @@ module.exports = class Database {
             value: name.toLowerCase()
         }
 
-        return (await this.database.get(COMMUNITY_TABLE, {where: where}))[0]
+        return (await this.database.getFromDatabaseTable(COMMUNITY_TABLE, {where: where})).results[0]
     }
 
     async matchCommunity(name, skip, limit){
@@ -455,11 +451,11 @@ module.exports = class Database {
             levenshtein: name
         }
 
-        return (await this.database.get(COMMUNITY_TABLE, {where: where, sort:sort, skip: skip, limit: limit}))
+        return (await this.database.getFromDatabaseTable(COMMUNITY_TABLE, {where: where, sort:sort, skip: skip, limit: limit})).results
     }
 
     async insertPost(id, user, community, title, content, created) {
-        await this.database.insert(POST_TABLE, {
+        await this.database.insertToDatabaseTable(POST_TABLE, {
             id: id,
             user: user,
             community: community.toLowerCase(),
@@ -476,7 +472,7 @@ module.exports = class Database {
             value: id
         }
 
-        return (await this.database.remove(POST_TABLE, {where: where}))
+        return (await this.database.removeFromDatabaseTable(POST_TABLE, {where: where})).removed
     }
 
     async getPost(id) {
@@ -486,7 +482,7 @@ module.exports = class Database {
             value: id
         }
 
-        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT}))[0]
+        let result = (await this.database.getFromDatabaseTable(POST_TABLE, {where: where, implement: POST_IMPLEMENT})).results[0]
 
         result.user = this.cleanUser(result.user)
 
@@ -549,7 +545,7 @@ module.exports = class Database {
             direction: 'desc'
         }
 
-        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
+        let result = (await this.database.getFromDatabaseTable(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort})).results
 
         for(let i in result){
             result[i].user = this.cleanUser(result[i].user)
@@ -576,7 +572,7 @@ module.exports = class Database {
             levenshtein: value
         }
 
-        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, sort: sort, skip: skip, limit: limit}))
+        let result = (await this.database.getFromDatabaseTable(POST_TABLE, {where: where, implement: POST_IMPLEMENT, sort: sort, skip: skip, limit: limit})).results
 
         for(let i in result){
             result[i].user = this.cleanUser(result[i].user)
@@ -609,7 +605,7 @@ module.exports = class Database {
             direction: 'desc'
         }
 
-        let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
+        let result = (await this.database.getFromDatabaseTable(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort})).results
 
         for(let i in result){
             result[i].user = this.cleanUser(result[i].user)
@@ -633,7 +629,7 @@ module.exports = class Database {
                 direction: 'desc'
             }
 
-            let result = (await this.database.get(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort}))
+            let result = (await this.database.getFromDatabaseTable(POST_TABLE, {where: where, implement: POST_IMPLEMENT, skip: skip, limit: limit, sort: sort})).results
 
             for(let i in result){
                 result[i].user = this.cleanUser(result[i].user)
@@ -646,7 +642,7 @@ module.exports = class Database {
     }
 
     async insertSubscription(user, community){
-        await this.database.insert(SUBSCRIPTION_TABLE, {user: user, community: community.toLowerCase()})
+        await this.database.insertToDatabaseTable(SUBSCRIPTION_TABLE, {user: user, community: community.toLowerCase()})
     }
 
     async removeSubscription(user, community){
@@ -661,7 +657,7 @@ module.exports = class Database {
             }
         }
 
-        return (await this.database.remove(SUBSCRIPTION_TABLE, {where: where}))
+        return (await this.database.removeFromDatabaseTable(SUBSCRIPTION_TABLE, {where: where})).removed
     }
 
     async getSubscriptions(user){
@@ -682,7 +678,7 @@ module.exports = class Database {
             }
         ]
 
-        let data = await this.database.get(SUBSCRIPTION_TABLE, { where: where, implement: implement })
+        let data = await this.database.getFromDatabaseTable(SUBSCRIPTION_TABLE, { where: where, implement: implement }).results
 
         let result = []
 
@@ -699,11 +695,11 @@ module.exports = class Database {
             direction: 'desc'
         }
 
-        return await this.database.get(CDN_TABLE, {sort: sort})
+        return await this.database.getFromDatabaseTable(CDN_TABLE, {sort: sort}).results
     }
 
     async insertPermission(user, permission){
-        await this.database.insert(PERMISSION_TABLE, {user: user, permission: permission})
+        await this.database.insertToDatabaseTable(PERMISSION_TABLE, {user: user, permission: permission})
     }
 
     async getPermission(user, permission){
@@ -718,6 +714,6 @@ module.exports = class Database {
             }
         }
 
-        return (await this.database.get(PERMISSION_TABLE, {where: where}))[0]
+        return (await this.database.getFromDatabaseTable(PERMISSION_TABLE, {where: where})).results[0]
     }
 }
