@@ -690,12 +690,18 @@ module.exports = class Database {
     }
 
     async getCdn(){
+        let where = {
+            field: 'load',
+            operator: '>',
+            value: '0'
+        }
+
         let sort = {
             field: 'load',
             direction: 'desc'
         }
 
-        return (await this.database.getFromDatabaseTable(CDN_TABLE, {sort: sort})).results
+        return (await this.database.getFromDatabaseTable(CDN_TABLE, {where: where, sort: sort})).results
     }
 
     async insertPermission(user, permission){
