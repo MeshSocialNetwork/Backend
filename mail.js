@@ -13,9 +13,6 @@ module.exports = class Mail {
             auth: {
                 user: config.smtpUsername,
                 pass: config.smtpPassword
-            },
-            tls: {
-                rejectUnauthorized: false
             }
         })
     }
