@@ -27,6 +27,6 @@ module.exports = class Mail {
         mail = mail.replaceAll("{USERNAME}", username)
         mail = mail.replaceAll("{VERIFY_MAIL_URL}", url)
 
-        await this.transporter.sendMail({from: this.config.smtpUsername, to: email, subject: 'meshnetwork.app mail verification', html: mail})
+        await this.transporter.sendMail({from: this.config.smtpFrom, to: email, subject: 'meshnetwork.app mail verification', html: mail})
     }
 }
